@@ -1,3 +1,6 @@
+from lib.models.author import Author
+
+
 def test_can_create_author():
     author = Author("Jane Doe")
     author.save()

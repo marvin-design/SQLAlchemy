@@ -1,3 +1,6 @@
+from lib.models.magazine import Magazine
+
+
 def test_magazine_articles_and_contributors():
     magazine = Magazine.find_by_name("Tech Today")
     articles = magazine.articles()

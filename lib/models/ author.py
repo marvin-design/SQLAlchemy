@@ -1,19 +1,17 @@
 from lib.db.connection import get_connection
 
 class Author:
-    def __init__(self, id, name):
+    def __init__(self, name, id=None):
         self.id = id
         self.name = name
 
-    @classmethod
-    def create(cls, name):
+    def save(self):
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO authors (name) VALUES (?) RETURNING id", (name,))
-        id = cursor.fetchone()["id"]
+        cursor.execute("INSERT INTO authors (name) VALUES (?) RETURNING id", (self.name,))
+        self.id = cursor.fetchone()[0]
         conn.commit()
         conn.close()
-        return cls(id=id, name=name)
 
     @classmethod
     def find_by_name(cls, name):
@@ -23,29 +21,21 @@ class Author:
         row = cursor.fetchone()
         conn.close()
         if row:
-            return cls(id=row["id"], name=row["name"])
+            return cls(id=row[0], name=row[1])
         return None
 
     def articles(self):
-        from lib.models.article import Article
-        return Article.find_by_author_id(self.id)
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM articles WHERE author_id = ?", (self.id,))
+        return cursor.fetchall()
 
     def magazines(self):
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT DISTINCT m.* FROM magazines m
-            JOIN articles a ON m.id = a.magazine_id
-            WHERE a.author_id = ?
+        SELECT DISTINCT m.* FROM magazines m
+        JOIN articles a ON m.id = a.magazine_id
+        WHERE a.author_id = ?
         """, (self.id,))
-        rows = cursor.fetchall()
-        conn.close()
-        from lib.models.magazine import Magazine
-        return [Magazine(row["id"], row["name"], row["category"]) for row in rows]
-
-    def add_article(self, magazine, title):
-        from lib.models.article import Article
-        return Article.create(title=title, author_id=self.id, magazine_id=magazine.id)
-
-    def topic_areas(self):
-        return list({m.category for m in self.magazines()})
+        return cursor.fetchall()

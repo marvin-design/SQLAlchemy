@@ -1,3 +1,9 @@
+from lib.models.article import Article
+from lib.models.author import Author
+from lib.models.magazine import Magazine
+
+
+
 def test_can_create_article():
     author = Author("Test Writer")
     author.save()
