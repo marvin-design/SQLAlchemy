@@ -1,3 +1,11 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from lib.models.author import Author
+from lib.models.article import Article
+from lib.models.magazine import Magazine
+
 def test_can_create_article():
     author = Author("Test Writer")
     author.save()
@@ -10,7 +18,6 @@ def test_can_create_article():
     assert article.id is not None
 
 def test_article_links_to_author_and_magazine():
-    # Setup
     author = Author("Test Writer")
     author.save()
     magazine = Magazine("Tech Today", "Technology")
@@ -18,7 +25,8 @@ def test_article_links_to_author_and_magazine():
     article = Article("AI is Here", author.id, magazine.id)
     article.save()
 
-    # Fetch and assert
-    found_article = Article.find_by_title("AI is Here")  # Ensure this returns a single object
+    found_article = Article.find_by_title("AI is Here")
+    assert found_article is not None
+
     assert found_article.author().name == "Test Writer"
     assert found_article.magazine().name == "Tech Today"

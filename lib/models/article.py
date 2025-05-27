@@ -11,9 +11,26 @@ class Article:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO articles (title, author_id, magazine_id) VALUES (?, ?, ?) RETURNING id",
+            "INSERT INTO articles (title, author_id, magazine_id) VALUES (?, ?, ?)",
             (self.title, self.author_id, self.magazine_id)
         )
-        self.id = cursor.fetchone()[0]
+        self.id = cursor.lastrowid
         conn.commit()
-        conn.close()
+
+    @classmethod
+    def find_by_title(cls, title):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM articles WHERE title = ?", (title,))
+        row = cursor.fetchone()
+        if row:
+            return cls(id=row["id"], title=row["title"], author_id=row["author_id"], magazine_id=row["magazine_id"])
+        return None
+
+    def author(self):
+        from lib.models.author import Author
+        return Author.find_by_id(self.author_id)
+
+    def magazine(self):
+        from lib.models.magazine import Magazine
+        return Magazine.find_by_id(self.magazine_id)
